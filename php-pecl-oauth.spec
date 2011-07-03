@@ -4,17 +4,13 @@
 %global pecl_name oauth
 
 Name:		php-pecl-oauth	
-Version:	1.1.0
-Release:	6%{?dist}
+Version:	1.2
+Release:	1%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
 URL:		http://pecl.php.net/package/oauth
 Source0:	http://pecl.php.net/get/%{pecl_name}-%{version}.tgz
-
-# Fix for http://pecl.php.net/bugs/bug.php?id=22337 (in trunk)
-Patch0:		%{name}_fix_ssl_bug_22337.patch
-
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	php-devel
@@ -42,8 +38,6 @@ usernames and passwords.
 
 %prep
 %setup -q -c
-cd %{pecl_name}-%{version}
-%patch0 -p0
 
 %build
 cd %{pecl_name}-%{version}
@@ -93,6 +87,9 @@ php -n \
 %{pecl_xmldir}/%{name}.xml
 
 %changelog
+* Sun Jul 03 2011 F. Kooman <fkooman@tuxed.net> - 1.2-1
+- upgrade to 1.2
+
 * Sun Jun 19 2011 F. Kooman <fkooman@tuxed.net> - 1.1.0-6
 - add fix for http://pecl.php.net/bugs/bug.php?id=22337
 
