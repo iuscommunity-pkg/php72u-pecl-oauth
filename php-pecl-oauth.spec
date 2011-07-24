@@ -4,7 +4,7 @@
 %global pecl_name oauth
 
 Name:		php-pecl-oauth	
-Version:	1.2.1
+Version:	1.2.2
 Release:	1%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
@@ -87,6 +87,9 @@ php -n \
 %{pecl_xmldir}/%{name}.xml
 
 %changelog
+* Sun Jul 24 2011 F. Kooman <fkooman@tuxed.net> - 1.2.2-1
+- Update to 1.2.2 (really fix RHBZ #724872 this time)
+
 * Fri Jul 22 2011 F. Kooman <fkooman@tuxed.net> - 1.2.1-1
 - update to 1.2.1 (RHBZ #724872). See
   http://pecl.php.net/package-changelog.php?package=oauth&release=1.2.1
