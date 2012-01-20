@@ -5,7 +5,7 @@
 
 Name:		php-pecl-oauth	
 Version:	1.2.2
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -26,10 +26,12 @@ Provides:	php-pecl(%{pecl_name}) = %{version}
 BuildRequires:	libcurl-devel
 BuildRequires:	pcre-devel
 
-%{?filter_setup:
-%filter_provides_in %{php_extdir}/.*\.so$
-%filter_setup
-}
+# RPM 4.8
+%{?filter_provides_in: %filter_provides_in %{php_extdir}/.*\.so$}
+%{?filter_setup}
+# RPM 4.9
+%global __provides_exclude_from %{?__provides_exclude_from:%__provides_exclude_from|}%{php_extdir}/.*\\.so$
+
 
 %description
 OAuth is an authorization protocol built on top of HTTP which allows 
@@ -87,6 +89,10 @@ php -n \
 %{pecl_xmldir}/%{name}.xml
 
 %changelog
+* Thu Jan 19 2012 Remi Collet <remi@fedoraproject.org> - 1.2.2-3
+- build against php 5.4
+- fix filters
+
 * Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
 
