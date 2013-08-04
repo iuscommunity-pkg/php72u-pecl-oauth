@@ -5,7 +5,7 @@
 
 Name:		php-pecl-oauth	
 Version:	1.2.3
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -89,6 +89,9 @@ php -n \
 %{pecl_xmldir}/%{name}.xml
 
 %changelog
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.3-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
 * Fri Mar 22 2013 Remi Collet <rcollet@redhat.com> - 1.2.3-3
 - rebuild for http://fedoraproject.org/wiki/Features/Php55
 
