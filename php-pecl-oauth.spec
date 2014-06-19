@@ -2,10 +2,15 @@
 %{!?php_extdir:	%{expand: %%global php_extdir %(php-config --extension-dir)}}
 
 %global pecl_name oauth
+%if "%{php_version}" < "5.6"
+%global ini_name  %{pecl_name}.ini
+%else
+%global ini_name  40-%{pecl_name}.ini
+%endif
 
 Name:		php-pecl-oauth	
 Version:	1.2.3
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -54,7 +59,7 @@ rm -rf %{buildroot}
 make install INSTALL_ROOT=%{buildroot}
 
 mkdir -p %{buildroot}%{_sysconfdir}/php.d
-cat > %{buildroot}%{_sysconfdir}/php.d/%{pecl_name}.ini << 'EOF'
+cat > %{buildroot}%{_sysconfdir}/php.d/%{ini_name} << 'EOF'
 ; Enable %{pecl_name} extension module
 extension=%{pecl_name}.so
 EOF
@@ -84,11 +89,15 @@ php -n \
 %files
 %defattr(-,root,root,-)
 %doc %{pecl_name}-%{version}/LICENSE %{pecl_name}-%{version}/examples
-%config(noreplace) %{_sysconfdir}/php.d/%{pecl_name}.ini
+%config(noreplace) %{_sysconfdir}/php.d/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
 %{pecl_xmldir}/%{name}.xml
 
 %changelog
+* Thu Jun 19 2014 Remi Collet <rcollet@redhat.com> - 1.2.3-6
+- rebuild for https://fedoraproject.org/wiki/Changes/Php56
+- add numerical prefix to extension configuration file
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.3-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
