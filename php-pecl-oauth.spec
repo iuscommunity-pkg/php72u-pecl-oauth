@@ -1,7 +1,9 @@
-%{!?__pecl:	%{expand: %%global __pecl     %{_bindir}/pecl}}
-%{!?php_extdir:	%{expand: %%global php_extdir %(php-config --extension-dir)}}
+%{!?php_inidir:  %global php_inidir   %{_sysconfdir}/php.d}
+%{!?__pecl:      %global __pecl       %{_bindir}/pecl}
+%{!?__php:       %global __php        %{_bindir}/php}
 
 %global pecl_name oauth
+%global with_zts  0%{?__ztsphp:1}
 %if "%{php_version}" < "5.6"
 %global ini_name  %{pecl_name}.ini
 %else
@@ -16,59 +18,84 @@ Group:		Development/Languages
 License:	BSD
 URL:		http://pecl.php.net/package/oauth
 Source0:	http://pecl.php.net/get/%{pecl_name}-%{version}.tgz
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	php-devel
-Requires:	php(zend-abi) = %{php_zend_api}
-Requires:	php(api) = %{php_core_api}
-
 BuildRequires:	php-pear
-Requires(post):	%{__pecl}
-Requires(postun):	%{__pecl}
-
-Provides:	php-pecl(%{pecl_name}) = %{version}
-
 BuildRequires:	libcurl-devel
 BuildRequires:	pcre-devel
 
-# RPM 4.8
-%{?filter_provides_in: %filter_provides_in %{php_extdir}/.*\.so$}
+Requires(post):	%{__pecl}
+Requires(postun):	%{__pecl}
+Requires:	php(zend-abi) = %{php_zend_api}
+Requires:	php(api) = %{php_core_api}
+
+Provides:	php-pecl(%{pecl_name}) = %{version}
+Provides:	php-pecl(%{pecl_name})%{_isa} = %{version}
+Provides:	php-%{pecl_name} = %{version}
+Provides:	php-%{pecl_name}%{_isa} = %{version}
+
+%if 0%{?fedora} < 20 && 0%{?rhel} < 7
+# Filter shared private
+%{?filter_provides_in: %filter_provides_in %{_libdir}/.*\.so$}
 %{?filter_setup}
-# RPM 4.9
-%global __provides_exclude_from %{?__provides_exclude_from:%__provides_exclude_from|}%{php_extdir}/.*\\.so$
+%endif
 
 
 %description
 OAuth is an authorization protocol built on top of HTTP which allows 
 applications to securely access data without having to store
-usernames and passwords.
+user names and passwords.
+
 
 %prep
 %setup -q -c
+mv %{pecl_name}-%{version} NTS
 
-%build
-cd %{pecl_name}-%{version}
-phpize
-%configure
-make %{?_smp_mflags}
-
-
-%install
-cd %{pecl_name}-%{version}
-rm -rf %{buildroot}
-make install INSTALL_ROOT=%{buildroot}
-
-mkdir -p %{buildroot}%{_sysconfdir}/php.d
-cat > %{buildroot}%{_sysconfdir}/php.d/%{ini_name} << 'EOF'
+cat >%{ini_name} << 'EOF'
 ; Enable %{pecl_name} extension module
 extension=%{pecl_name}.so
 EOF
 
-mkdir -p %{buildroot}%{pecl_xmldir}
-install -m 644 ../package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
+%if %{with_zts}
+# duplicate for ZTS build
+cp -pr NTS ZTS
+%endif
 
-%clean
-rm -rf %{buildroot}
+
+%build
+cd NTS
+%{_bindir}/phpize
+%configure --with-php-config=%{_bindir}/php-config
+make %{?_smp_mflags}
+
+%if %{with_zts}
+cd ../ZTS
+%{_bindir}/zts-phpize
+%configure --with-php-config=%{_bindir}/zts-php-config
+make %{?_smp_mflags}
+%endif
+
+
+%install
+make install -C NTS INSTALL_ROOT=%{buildroot}
+
+# Drop in the bit of configuration
+install -D -m 644 %{ini_name} %{buildroot}%{php_inidir}/%{ini_name}
+
+# Install XML package description
+install -D -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
+
+%if %{with_zts}
+make install -C ZTS INSTALL_ROOT=%{buildroot}
+install -D -m 644 %{ini_name} %{buildroot}%{php_ztsinidir}/%{ini_name}
+%endif
+
+# Test & Documentation
+cd NTS
+for i in $(grep 'role="doc"' ../package.xml | sed -e 's/^.*name="//;s/".*$//')
+do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
+done
+
 
 %post
 %{pecl_install} %{pecl_xmldir}/%{name}.xml >/dev/null || :
@@ -79,21 +106,40 @@ if [ $1 -eq 0 ]; then
 %{pecl_uninstall} %{pecl_name} >/dev/null || :
 fi
 
+
 %check
-cd %{pecl_name}-%{version}
-php -n \
-    -d extension_dir=modules \
-    -d extension=%{pecl_name}.so \
+: Minimal load test for NTS extension
+%{__php} -n \
+    -d extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
     --modules | grep OAuth
 
+%if %{with_zts}
+: Minimal load test for ZTS extension
+%{__ztsphp} -n \
+    -d extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
+    --modules | grep OAuth
+%endif
+
+
 %files
-%defattr(-,root,root,-)
-%doc %{pecl_name}-%{version}/LICENSE %{pecl_name}-%{version}/examples
-%config(noreplace) %{_sysconfdir}/php.d/%{ini_name}
-%{php_extdir}/%{pecl_name}.so
+%doc %{pecl_docdir}/%{pecl_name}
 %{pecl_xmldir}/%{name}.xml
 
+%config(noreplace) %{_sysconfdir}/php.d/%{ini_name}
+%{php_extdir}/%{pecl_name}.so
+
+%if %{with_zts}
+%config(noreplace) %{php_ztsinidir}/%{ini_name}
+%{php_ztsextdir}/%{pecl_name}.so
+%endif
+
+
 %changelog
+* Mon Sep  8 2014 Remi Collet <rcollet@redhat.com> - 1.2.3-7
+- cleanup and modernize the spec
+- build ZTS extension (fedora)
+- install doc in pecl_docdir
+
 * Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.3-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
