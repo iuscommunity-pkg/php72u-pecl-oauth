@@ -12,7 +12,7 @@
 
 Name:		php-pecl-oauth	
 Version:	1.2.3
-Release:	7%{?dist}
+Release:	8%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -135,7 +135,7 @@ fi
 
 
 %changelog
-* Mon Sep  8 2014 Remi Collet <rcollet@redhat.com> - 1.2.3-7
+* Mon Sep  8 2014 Remi Collet <rcollet@redhat.com> - 1.2.3-8
 - cleanup and modernize the spec
 - build ZTS extension (fedora)
 - install doc in pecl_docdir
