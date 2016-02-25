@@ -12,7 +12,7 @@
 
 Name:		php-pecl-oauth	
 Version:	1.2.3
-Release:	10%{?dist}
+Release:	11%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -24,8 +24,10 @@ BuildRequires:	php-pear
 BuildRequires:	libcurl-devel
 BuildRequires:	pcre-devel
 
+%if 0%{?fedora} < 24
 Requires(post):	%{__pecl}
 Requires(postun):	%{__pecl}
+%endif
 Requires:	php(zend-abi) = %{php_zend_api}
 Requires:	php(api) = %{php_core_api}
 
@@ -97,6 +99,7 @@ do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
 
 
+%if 0%{?fedora} < 24
 %post
 %{pecl_install} %{pecl_xmldir}/%{name}.xml >/dev/null || :
 
@@ -105,6 +108,7 @@ done
 if [ $1 -eq 0 ]; then
 %{pecl_uninstall} %{pecl_name} >/dev/null || :
 fi
+%endif
 
 
 %check
@@ -135,6 +139,9 @@ fi
 
 
 %changelog
+* Thu Feb 25 2016 Remi Collet <remi@fedoraproject.org> - 1.2.3-11
+- drop scriptlets (replaced by file triggers in php-pear) #1310546
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.3-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
