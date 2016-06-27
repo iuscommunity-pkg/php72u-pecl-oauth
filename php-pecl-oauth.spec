@@ -1,33 +1,23 @@
-%{!?php_inidir:  %global php_inidir   %{_sysconfdir}/php.d}
 %{!?__pecl:      %global __pecl       %{_bindir}/pecl}
-%{!?__php:       %global __php        %{_bindir}/php}
 
 %global pecl_name oauth
 %global with_zts  0%{?__ztsphp:1}
-%if "%{php_version}" < "5.6"
-%global ini_name  %{pecl_name}.ini
-%else
 %global ini_name  40-%{pecl_name}.ini
-%endif
 
 Name:		php-pecl-oauth	
-Version:	1.2.3
-Release:	11%{?dist}
+Version:	2.0.2
+Release:	1%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
 URL:		http://pecl.php.net/package/oauth
 Source0:	http://pecl.php.net/get/%{pecl_name}-%{version}.tgz
 
-BuildRequires:	php-devel
+BuildRequires:	php-devel > 7
 BuildRequires:	php-pear
 BuildRequires:	libcurl-devel
 BuildRequires:	pcre-devel
 
-%if 0%{?fedora} < 24
-Requires(post):	%{__pecl}
-Requires(postun):	%{__pecl}
-%endif
 Requires:	php(zend-abi) = %{php_zend_api}
 Requires:	php(api) = %{php_core_api}
 
@@ -35,12 +25,6 @@ Provides:	php-pecl(%{pecl_name}) = %{version}
 Provides:	php-pecl(%{pecl_name})%{_isa} = %{version}
 Provides:	php-%{pecl_name} = %{version}
 Provides:	php-%{pecl_name}%{_isa} = %{version}
-
-%if 0%{?fedora} < 20 && 0%{?rhel} < 7
-# Filter shared private
-%{?filter_provides_in: %filter_provides_in %{_libdir}/.*\.so$}
-%{?filter_setup}
-%endif
 
 
 %description
@@ -52,6 +36,12 @@ user names and passwords.
 %prep
 %setup -q -c
 mv %{pecl_name}-%{version} NTS
+
+# Don't install/register tests
+sed -e 's/role="test"/role="src"/' \
+    -e '/LICENSE/s/role="doc"/role="src"/' \
+    -i package.xml
+
 
 cat >%{ini_name} << 'EOF'
 ; Enable %{pecl_name} extension module
@@ -99,18 +89,6 @@ do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
 
 
-%if 0%{?fedora} < 24
-%post
-%{pecl_install} %{pecl_xmldir}/%{name}.xml >/dev/null || :
-
-
-%postun
-if [ $1 -eq 0 ]; then
-%{pecl_uninstall} %{pecl_name} >/dev/null || :
-fi
-%endif
-
-
 %check
 : Minimal load test for NTS extension
 %{__php} -n \
@@ -126,6 +104,7 @@ fi
 
 
 %files
+%license NTS/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
 %{pecl_xmldir}/%{name}.xml
 
@@ -139,6 +118,10 @@ fi
 
 
 %changelog
+* Mon Jun 27 2016 Remi Collet <rcollet@redhat.com> - 2.0.2-1
+- update to 2.0.2
+- fix license installation
+
 * Thu Feb 25 2016 Remi Collet <remi@fedoraproject.org> - 1.2.3-11
 - drop scriptlets (replaced by file triggers in php-pear) #1310546
 
