@@ -1,4 +1,5 @@
-%{!?__pecl:      %global __pecl       %{_bindir}/pecl}
+# we don't want -z defs linker flag
+%undefine _strict_symbol_defs_build
 
 %global pecl_name oauth
 %global with_zts  0%{?__ztsphp:1}
@@ -6,7 +7,7 @@
 
 Name:		php-pecl-oauth	
 Version:	2.0.2
-Release:	6%{?dist}
+Release:	7%{?dist}
 Summary:	PHP OAuth consumer extension
 Group:		Development/Languages
 License:	BSD
@@ -118,6 +119,9 @@ done
 
 
 %changelog
+* Mon Jan 29 2018 Remi Collet <remi@remirepo.net> - 2.0.2-7
+- undefine _strict_symbol_defs_build
+
 * Tue Oct 03 2017 Remi Collet <remi@fedoraproject.org> - 2.0.2-6
 - rebuild for https://fedoraproject.org/wiki/Changes/php72
 
