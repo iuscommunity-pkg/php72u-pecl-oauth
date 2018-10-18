@@ -9,7 +9,7 @@
 %bcond_without zts
 
 Name:           %{php}-pecl-%{pecl_name}
-Version:        2.0.2
+Version:        2.0.3
 Release:        1.ius%{?dist}
 Summary:        PHP OAuth consumer extension
 License:        BSD
@@ -153,6 +153,9 @@ fi
 
 
 %changelog
+* Thu Oct 18 2018 Carl George <carl@george.computer> - 2.0.3-1.ius
+- Latest upstream
+
 * Thu Feb 08 2018 Ben Harper <ben.harper@rackspace.com> - 2.0.2-1.ius
 - port from Fedora
 
