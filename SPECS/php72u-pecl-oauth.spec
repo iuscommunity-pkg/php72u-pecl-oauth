@@ -1,6 +1,6 @@
-# IUS spec file for php72u-pecl-oauth, forked from Fedora:
-# we don't want -z defs linker flag
-%undefine _strict_symbol_defs_build
+# IUS spec file for php72u-pecl-oauth, forked from:
+#
+# Fedora spec file for php-pecl-oauth
 
 %global pecl_name oauth
 %global ini_name  40-%{pecl_name}.ini
@@ -9,13 +9,12 @@
 %bcond_without zts
 
 Name:           %{php}-pecl-%{pecl_name}
-Version:	2.0.2
-Release:	1.ius%{?dist}
-Summary:	PHP OAuth consumer extension
-Group:		Development/Languages
-License:	BSD
-URL:		https://pecl.php.net/package/oauth
-Source0:	https://pecl.php.net/get/%{pecl_name}-%{version}.tgz
+Version:        2.0.2
+Release:        1.ius%{?dist}
+Summary:        PHP OAuth consumer extension
+License:        BSD
+URL:            https://pecl.php.net/package/%{pecl_name}
+Source0:        https://pecl.php.net/get/%{pecl_name}-%{version}.tgz
 
 BuildRequires:  %{php}-devel
 BuildRequires:  libcurl-devel
@@ -61,19 +60,16 @@ user names and passwords.
 %setup -q -c
 mv %{pecl_name}-%{version} NTS
 
-# Don't install/register tests
 sed -e 's/role="test"/role="src"/' \
     -e '/LICENSE/s/role="doc"/role="src"/' \
     -i package.xml
 
-
-cat >%{ini_name} << 'EOF'
+cat > %{ini_name} << EOF
 ; Enable %{pecl_name} extension module
 extension=%{pecl_name}.so
 EOF
 
 %if %{with zts}
-# duplicate for ZTS build
 cp -pr NTS ZTS
 %endif
 
@@ -82,48 +78,44 @@ cp -pr NTS ZTS
 pushd NTS
 %{_bindir}/phpize
 %configure --with-php-config=%{_bindir}/php-config
-make %{?_smp_mflags}
+%make_build
 popd
 
-%if %{with_zts}
+%if %{with zts}
 pushd ZTS
 %{_bindir}/zts-phpize
 %configure --with-php-config=%{_bindir}/zts-php-config
-make %{?_smp_mflags}
+%make_build
 popd
 %endif
 
 
 %install
-make install -C NTS INSTALL_ROOT=%{buildroot}
-
-# Drop in the bit of configuration
+make -C NTS install INSTALL_ROOT=%{buildroot}
 install -D -m 644 %{ini_name} %{buildroot}%{php_inidir}/%{ini_name}
 
-# Install XML package description
-install -D -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{pecl_name}.xml
-
 %if %{with zts}
-make install -C ZTS INSTALL_ROOT=%{buildroot}
+make -C ZTS install INSTALL_ROOT=%{buildroot}
 install -D -m 644 %{ini_name} %{buildroot}%{php_ztsinidir}/%{ini_name}
 %endif
 
-# Test & Documentation
+install -D -p -m 644 package.xml %{buildroot}%{pecl_xmldir}/%{pecl_name}.xml
+
 for i in $(grep 'role="doc"' package.xml | sed -e 's/^.*name="//;s/".*$//')
 do install -D -p -m 644 NTS/$i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
 
 
 %check
-: Minimal load test for NTS extension
-%{__php} -n \
-    -d extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
+%{__php} \
+    --no-php-ini \
+    --define extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
     --modules | grep OAuth
 
 %if %{with zts}
-: Minimal load test for ZTS extension
-%{__ztsphp} -n \
-    -d extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
+%{__ztsphp} \
+    --no-php-ini \
+    --define extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
     --modules | grep OAuth
 %endif
 
@@ -145,17 +137,18 @@ if [ $1 -eq 0 -a -x %{__pecl} ]; then
     %{pecl_uninstall} %{pecl_name} >/dev/null || :
 fi
 
+
 %files
 %license NTS/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
 %{pecl_xmldir}/%{pecl_name}.xml
 
-%config(noreplace) %{_sysconfdir}/php.d/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
+%config(noreplace) %{php_inidir}/%{ini_name}
 
-%if %{with_zts}
-%config(noreplace) %{php_ztsinidir}/%{ini_name}
+%if %{with zts}
 %{php_ztsextdir}/%{pecl_name}.so
+%config(noreplace) %{php_ztsinidir}/%{ini_name}
 %endif
 
 
